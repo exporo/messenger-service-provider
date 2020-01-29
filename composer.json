@@ -1,0 +1,21 @@
+{
+  "name": "exporo/php-messenger-service-provider",
+  "type": "library",
+  "description": "Symfony Messenger for Lumen",
+  "require": {
+    "php": "~7.1.0",
+    "sroze/messenger-enqueue-transport": "^0.3.2",
+    "symfony/property-access": "^5.0",
+    "symfony/serializer": "^5.0",
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~7.0"
+  },
+  "autoload": {
+    "psr-4": { "Exporo\\Messenger\\": "src/Messenger" },
+    "exclude-from-classmap": [
+      "/Tests/"
+    ]
+  },
+  "minimum-stability": "dev"
+}

@@ -1,5 +1,5 @@
 {
-  "name": "exporo/php-messenger-service-provider",
+  "name": "exporo/messenger-service-provider",
   "type": "library",
   "description": "Symfony Messenger for Lumen",
   "require": {

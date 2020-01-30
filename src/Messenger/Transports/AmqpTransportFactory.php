@@ -1,5 +1,5 @@
 <?php
-namespace Messenger\Transports;
+namespace Exporo\Messenger\Transports;
 
 use Enqueue\AmqpExt\AmqpConnectionFactory;
 use Enqueue\MessengerAdapter\AmqpContextManager;

@@ -1,7 +1,7 @@
 <?php
-namespace Messenger\Providers;
+namespace Exporo\Messenger\Providers;
 
-use Messenger\Transports\Serialization\TypeAwareSerializerFactory;
+use Exporo\Messenger\Transports\Serialization\TypeAwareSerializerFactory;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Messenger\Handler\HandlersLocator;

@@ -1,5 +1,5 @@
 <?php
-namespace Messenger\Transports\Serialization;
+namespace Exporo\Messenger\Transports\Serialization;
 
 use Symfony\Component\Messenger\Transport\Serialization\Serializer;
 

@@ -1,13 +1,15 @@
 # Symfony Messenger for Lumen
 
-## Usage
+This package is intended to be used with Laravel/Lumen.
 
-First, define your provider:
+## Service Provider
+
+First, declare some ServiceProvider:
 
 ```
 use Exporo\Messenger\Providers\MessengerServiceProvider;
 
-class YourProvider extends MessengerServiceProvider
+class YourServiceProvider extends MessengerServiceProvider
 {
     protected $transports = [
     ];
@@ -27,9 +29,11 @@ class YourProvider extends MessengerServiceProvider
 
 ```
 
+Don't forget to register it in your bootstrapping process.
+
 ## Transports 
 
-Now, add some transport factories:
+Add one or more transport factories. They depend on `\Symfony\Component\Messenger\Transport\TransportFactoryInterface`, so you can also easily add your own.
 
 ```
 protected $transportFactories = [
@@ -39,7 +43,7 @@ protected $transportFactories = [
 
 ```
 
-And declare your transports:
+Now, after you added support for some specific transport protocol(s), you can define your transport:
 
 ```
 protected $transports = [
@@ -48,15 +52,17 @@ protected $transports = [
         'serializer' => Serializer::class,
         'options' => [
             'queue' => ['name' => 'something'],
-            'topic' => ['name' => 'something'] // Also known as exchange
+            'topic' => ['name' => 'something']
         ]
     ],
 ];
 ```
 
+This will be the actual sender/receiver. You _may_ want to use it directly, so you can get an instance of `\Symfony\Component\Messenger\Transport\TransportInterface` from the container with `messenger.transport.some_transport`.
+
 ### TypeAwareSerializer
 
-The default serializer will always add the FQCN of your message to the headers. To have fully language/platform agnostic queuing you can use the TypeAwareSerializer, which always expect the message to be from the given type:
+The default serializer will always add the FQCN of your message to the headers and will fail if it's missing on deserialize. In distributed systems, you normally don't want to have this dependency. For that you can use the TypeAwareSerializer. It will assume that all your messages on the given transport are from the same type, but also removes the need for additional message headers.
 
 ```
 protected $transports = [
@@ -70,7 +76,7 @@ protected $transports = [
         ],
         'options' => [
             'queue' => ['name' => 'my_queue'],
-            'topic' => ['name' => 'my_topic'] // Also known as exchange
+            'topic' => ['name' => 'my_topic']
         ]
     ],
 ];
@@ -78,7 +84,7 @@ protected $transports = [
 
 ## Sending messages
 
-First, add some routing to let the messenger know which message should be go to which transport:
+Let's add some routing to let the messenger know which message should be go to which transport. Your message class can be any POPO.
 
 ```
 protected $routing = [
@@ -89,7 +95,7 @@ protected $routing = [
 
 ```
 
-And declare a message bus for sending:
+Now, we declare our sending message bus. 
 
 ```
 protected $messageBuses = [
@@ -111,7 +117,7 @@ $messenger->dispatch(new SomeMessage()); // Will dispatch "SomeMessage" on "some
 
 ## Consuming messages
 
-First, declare a handler:
+For consuming, we need to declare a `MessageHandlerInterface`:
 
 ```
 class SomeHandler implements MessageHandlerInterface
@@ -123,7 +129,7 @@ class SomeHandler implements MessageHandlerInterface
 }
 ```
 
-And map your message to the handler:
+To make the Messenger know which message should be handles by which handler(s), we have to add it like this:
 
 ```
 protected $handlers = [
@@ -134,7 +140,7 @@ protected $handlers = [
 
 ```
 
-Now, declare a message bus for handling:
+As with sending, we need to declare a message bus for handling too:
 
 ```
 protected $messageBuses = [
@@ -147,7 +153,9 @@ protected $messageBuses = [
 
 ### Using Symfony Worker
 
-See https://symfony.com/doc/current/messenger.html#messenger-worker for details
+This is the easiest way to create a message consumer.
+
+See https://symfony.com/doc/current/messenger.html#messenger-worker for details.
 
 ```
 $messenger = $container->get(MessengerInterface::class);
@@ -160,7 +168,7 @@ $transport = $container->get('messenger.transport.some_transport');
 
 ### BYO Worker
 
-You can also build your own:
+You can also build your own. As you can see in this example, the message bus is actually only do the handling, the receiving is done through the transport self.
 
 ```
 $messenger = $container->get(MessengerInterface::class);

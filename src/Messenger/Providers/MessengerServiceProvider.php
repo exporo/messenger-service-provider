@@ -1,7 +1,7 @@
 <?php
 namespace App\Messenger\Providers;
 
-use App\Messenger\Transports\Serialization\TypeAwareSerializerFactory;
+use Messenger\Transports\Serialization\TypeAwareSerializerFactory;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Messenger\Handler\HandlersLocator;

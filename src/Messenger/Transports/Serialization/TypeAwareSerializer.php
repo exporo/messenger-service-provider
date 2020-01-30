@@ -1,5 +1,5 @@
 <?php
-namespace App\Messenger\Transports\Serialization;
+namespace Messenger\Transports\Serialization;
 
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Serialization\Serializer;

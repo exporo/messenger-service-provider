@@ -4,8 +4,7 @@
   "description": "Symfony Messenger for Lumen",
   "require": {
     "php": "~7.1.0",
-    "symfony/messenger": "^5.0",
-    "sroze/messenger-enqueue-transport": "^0.3.2",
+    "sroze/messenger-enqueue-transport": "^0.4",
     "symfony/property-access": "^5.0",
     "symfony/serializer": "^5.0",
     "illuminate/support": "^6.0"

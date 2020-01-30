@@ -1,5 +1,5 @@
 <?php
-namespace App\Messenger\Providers;
+namespace Messenger\Providers;
 
 use Messenger\Transports\Serialization\TypeAwareSerializerFactory;
 use Illuminate\Contracts\Container\Container;

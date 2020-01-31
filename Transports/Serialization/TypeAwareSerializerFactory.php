@@ -25,12 +25,9 @@ class TypeAwareSerializerFactory
     public function create(array $options)
     {
         if (!isset($options['type'])) {
-            throw new \InvalidArgumentException("Missing option: 'type'");
+            throw new \InvalidArgumentException('Option "type" was not set and should be a FQCN');
         }
 
-        return new TypeAwareSerializer(
-            $this->serializer,
-            $options['type']
-        );
+        return new TypeAwareSerializer($this->serializer, $options['type']);
     }
 }

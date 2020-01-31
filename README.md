@@ -175,9 +175,9 @@ $messenger = $container->get(MessengerInterface::class);
 $transport = $container->get('messenger.transport.some_transport');
 
 while(true) {
-	foreach($transport->get() as $k => $envelop) {
-	    $receiver->ack($envelop);
-	    $messenger->dispatch($envelop); // This will actually call the handlers, $envelop->getMessage() is already the deserialized object
+	foreach($transport->get() as $k => $envelope) {
+	    $receiver->ack($envelope);
+	    $messenger->dispatch($envelope); // This will actually call the handlers, $envelope->getMessage() is already the deserialized object
 	}
 }
 

@@ -120,7 +120,7 @@ class MessengerServiceProvider extends ServiceProvider
     /**
      * @return void
      */
-    private function registerSerializers()
+    protected function registerSerializers()
     {
         $this->app->singleton(Serializer::class, function () {
             return Serializer::create();
@@ -136,7 +136,7 @@ class MessengerServiceProvider extends ServiceProvider
     /**
      * @return void
      */
-    private function registerLocators()
+    protected function registerLocators()
     {
         $this->app->singleton(SendersLocator::class, function (Container $c) {
             $transformer = function (array $transports) {
@@ -162,7 +162,7 @@ class MessengerServiceProvider extends ServiceProvider
     /**
      * @return void
      */
-    private function registerMiddleware()
+    protected function registerMiddleware()
     {
         $this->app->singleton(SendMessageMiddleware::class, function (Container $c) {
             return new SendMessageMiddleware(
@@ -180,7 +180,7 @@ class MessengerServiceProvider extends ServiceProvider
     /**
      * @return void
      */
-    private function registerTransports()
+    protected function registerTransports()
     {
         $this->app->singleton(TransportFactory::class, function (Container $c) {
             return new TransportFactory(
@@ -198,7 +198,7 @@ class MessengerServiceProvider extends ServiceProvider
     /**
      * @param string $name
      */
-    private function registerTransport($name)
+    protected function registerTransport($name)
     {
         $this->app->singleton("messenger.transport.{$name}", function (Container $c) use ($name) {
             $config = $c->get('messenger.transports')[$name];
@@ -216,7 +216,7 @@ class MessengerServiceProvider extends ServiceProvider
     /**
      * @return void
      */
-    private function registerMessageBuses()
+    protected function registerMessageBuses()
     {
         foreach (array_keys($this->messageBuses) as $k => $name) {
             $this->app->singleton($name, function (Container $c) use ($name) {

@@ -190,7 +190,7 @@ class MessengerServiceProvider extends ServiceProvider
             );
         });
         
-        foreach (array_keys($c->get('messenger.transports')) as $k => $name) {
+        foreach (array_keys($this->app->get('messenger.transports')) as $k => $name) {
             $this->registerTransport($name);
         }
     }

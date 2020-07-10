@@ -189,8 +189,8 @@ class MessengerServiceProvider extends ServiceProvider
                 }, $this->transportFactories)
             );
         });
-
-        foreach (array_keys($this->transports) as $k => $name) {
+        
+        foreach (array_keys($c->get('messenger.transports')) as $k => $name) {
             $this->registerTransport($name);
         }
     }

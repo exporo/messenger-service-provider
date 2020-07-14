@@ -3,6 +3,7 @@ namespace Exporo\Messenger\Providers;
 
 use Exporo\Messenger\Transports\Serialization\TypeAwareSerializerFactory;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Messenger\Handler\HandlersLocator;
 use Symfony\Component\Messenger\MessageBus;
@@ -15,101 +16,10 @@ use Symfony\Component\Messenger\Transport\TransportFactory;
 class MessengerServiceProvider extends ServiceProvider
 {
     /**
-     * <code>
-     * 'low_priority_queue' => [
-     *     'dsn' => 'amqp://',
-     *     'serializer' => [
-     *         'factory' => TypeAwareSerializerFactory::class,
-     *         'options' => [
-     *             'type' => LowPriorityMessage::class
-     *         ]
-     *     ],
-     *     'options' => []
-     * ],
-     * 'default_queue' => [
-     *     'dsn' => 'amqp://',
-     *     'serializer' => Serializer::class,
-     *     'options' => []
-     * ]
-     * </code>
-     *
-     * @var array[]
-     */
-    protected $transports = [];
-
-    /**
-     * <code>
-     * SomeMessage::class => [
-     *     'some_transport'
-     * ];
-     * </code>
-     *
-     * @var array[]
-     */
-    protected $routing = [];
-
-    /**
-     * <code>
-     * SomeMessage::class => [
-     *     SomeHandler::class
-     * ];
-     * </code>
-     *
-     * @var array[]
-     */
-    protected $handlers = [];
-
-    /**
-     * List of FQCNs implementing Symfony\Component\Messenger\Transport\TransportFactoryInterface
-     *
-     * @var string[]
-     */
-    protected $transportFactories = [];
-
-    /**
-     * Registers message buses with given middleware
-     *
-     * <code>
-     * MessageBusInterface::class => [
-     *     YourMessageMiddleware::class
-     * ],
-     * 'sender_bus' => [
-     *     SendMessageMiddleware::class
-     * ],
-     * 'handler_bus' => [
-     *     HandleMessageMiddleware::class
-     * ]
-     * </code>
-     *
-     * @var array[]
-     */
-    protected $messageBuses = [];
-
-    /**
      * @return void
      */
     public function register()
     {
-        $this->app->singleton('messenger.transport_factories', function () {
-            return $this->transportFactories;
-        });
-
-        $this->app->singleton('messenger.transports', function () {
-            return $this->transports;
-        });
-
-        $this->app->singleton('messenger.routing', function () {
-            return $this->routing;
-        });
-
-        $this->app->singleton('messenger.handlers', function () {
-            return $this->handlers;
-        });
-
-        $this->app->singleton('messenger.message_buses', function () {
-            return $this->messageBuses;
-        });
-
         $this->registerSerializers();
         $this->registerLocators();
         $this->registerMiddleware();
@@ -145,7 +55,10 @@ class MessengerServiceProvider extends ServiceProvider
                 }, $transports);
             };
 
-            return new SendersLocator(array_map($transformer, $c->get('messenger.routing')), $c);
+            $routing = $c->get('config')
+                ->get('messenger.routing', []);
+
+            return new SendersLocator(array_map($transformer, $routing), $c);
         });
 
         $this->app->singleton(HandlersLocator::class, function (Container $c) {
@@ -155,7 +68,10 @@ class MessengerServiceProvider extends ServiceProvider
                 }, $handlers);
             };
 
-            return new HandlersLocator(array_map($transformer, $c->get('messenger.handlers')));
+            $handlers = $c->get('config')
+                ->get('messenger.handlers', []);
+
+            return new HandlersLocator(array_map($transformer, $handlers));
         });
     }
 
@@ -183,14 +99,17 @@ class MessengerServiceProvider extends ServiceProvider
     protected function registerTransports()
     {
         $this->app->singleton(TransportFactory::class, function (Container $c) {
+            $factories = $c->get('config')
+                ->get('messenger.transport_factories', []);
+
             return new TransportFactory(
                 array_map(function ($factoryName) use ($c) {
                     return $c->get($factoryName);
-                }, $this->transportFactories)
+                }, $factories)
             );
         });
-        
-        foreach (array_keys($this->app->get('messenger.transports')) as $k => $name) {
+
+        foreach (array_keys(Config::get('messenger.transports', [])) as $k => $name) {
             $this->registerTransport($name);
         }
     }
@@ -201,7 +120,8 @@ class MessengerServiceProvider extends ServiceProvider
     protected function registerTransport($name)
     {
         $this->app->singleton("messenger.transport.{$name}", function (Container $c) use ($name) {
-            $config = $c->get('messenger.transports')[$name];
+            $config = $c->get('config')
+                ->get('messenger.transports')[$name];
 
             return $c->get(TransportFactory::class)->createTransport(
                 $config['dsn'] ?? '',
@@ -218,11 +138,14 @@ class MessengerServiceProvider extends ServiceProvider
      */
     protected function registerMessageBuses()
     {
-        foreach (array_keys($this->messageBuses) as $k => $name) {
+        foreach (array_keys(Config::get('messenger.message_buses', [])) as $k => $name) {
             $this->app->singleton($name, function (Container $c) use ($name) {
+                $config = $c->get('config')
+                    ->get('messenger.message_buses')[$name];
+
                 $middleware = array_map(function ($middleware) use ($c) {
                     return $c->get($middleware);
-                }, $c->get('messenger.message_buses')[$name]);
+                }, $config);
 
                 return new MessageBus($middleware);
             });

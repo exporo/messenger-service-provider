@@ -4,49 +4,57 @@ This package is intended to be used with Laravel/Lumen.
 
 ## Service Provider
 
-First, declare some ServiceProvider:
+First, you need to declare a config like `config/messenger.php`
+```
+return [
+    'transports' => [],
+    'routing' => [],
+    'handlers' => [],
+    'transport_factories' => [],
+    'message_buses' => []
+];
+```
+
+For Lumen, you also need to register the config:
 
 ```
-use Exporo\Messenger\Providers\MessengerServiceProvider;
+use Exporo\Messenger\Providers\MessengerServiceProvider as MessengerProvider;
 
-class YourServiceProvider extends MessengerServiceProvider
+// Ensures the config is available before register
+class MessengerServiceProvider extends MessengerProvider
 {
-    protected $transports = [
-    ];
-
-    protected $routing = [
-    ];
-
-    protected $handlers = [
-    ];
-
-    protected $transportFactories = [
-    ];
-
-    protected $messageBuses = [
-    ];
+    public function register()
+    {
+        $this->mergeConfigFrom(__DIR__ . '/../../config/messenger.php', 'messenger');
+        parent::register();
+    }
 }
-
 ```
 
 Don't forget to register it in your bootstrapping process.
 
 ## Transports 
 
-Add one or more transport factories. They depend on `\Symfony\Component\Messenger\Transport\TransportFactoryInterface`, so you can also easily add your own.
+Add one or more transport factories to the config. They depend on `\Symfony\Component\Messenger\Transport\TransportFactoryInterface`, so you can also easily add your own.
 
 ```
-protected $transportFactories = [
-	Exporo\Messenger\Transports\AmqpTransportFactory::class,
-	// ...
+'transport_factories' = [
+    Exporo\Messenger\Transports\AmqpTransportFactory::class,
+    // ...
 ];
 
 ```
 
+Built in factories:
+- AmqpTransportFactory
+- KafkaTransportFactory
+- SqsTransportFactory
+
+
 Now, after you added support for some specific transport protocol(s), you can define your transport:
 
 ```
-protected $transports = [
+'transports' = [
     'some_transport' => [
         'dsn' => 'dsn://', // Whatever supported by your registered transport factories
         'serializer' => Serializer::class,
@@ -65,7 +73,7 @@ This will be the actual sender/receiver. You _may_ want to use it directly, so y
 The default serializer will always add the FQCN of your message to the headers and will fail if it's missing on deserialize. In distributed systems, you normally don't want to have this dependency. For that you can use the TypeAwareSerializer. It will assume that all your messages on the given transport are from the same type, but also removes the need for additional message headers.
 
 ```
-protected $transports = [
+'transports' = [
     'agnostic_' => [
         'dsn' => 'dsn://', // Whatever supported by your registered transport factories
         'serializer' => [
@@ -87,10 +95,10 @@ protected $transports = [
 Let's add some routing to let the messenger know which message should be go to which transport. Your message class can be any POPO.
 
 ```
-protected $routing = [
-	SomeMessage::class => [
-	    'some_transport'
-	]
+'routing' = [
+    SomeMessage::class => [
+        'some_transport'
+    ]
 ];
 
 ```
@@ -98,9 +106,9 @@ protected $routing = [
 Now, we declare our sending message bus. 
 
 ```
-protected $messageBuses = [
-	// Good for autowiring, but could be also "sender_bus" etc.
-    MessengerInterface::class => [
+'message_buses' = [
+    // Good for autowiring, but could be also "sender_bus" etc.
+    MessageBusInterface::class => [
         SendMessageMiddleware::class // Default middleware for sending
     ]
 ];
@@ -132,10 +140,10 @@ class SomeHandler implements MessageHandlerInterface
 To make the Messenger know which message should be handles by which handler(s), we have to add it like this:
 
 ```
-protected $handlers = [
-	SomeMessage::class => [
-		SomeHandler::class
-	]
+'handlers' = [
+    SomeMessage::class => [
+        SomeHandler::class
+    ]
 ];
 
 ```
@@ -143,9 +151,9 @@ protected $handlers = [
 As with sending, we need to declare a message bus for handling too:
 
 ```
-protected $messageBuses = [
-	// Good for autowiring, but could be also "receiver_bus" etc.
-    MessengerInterface::class => [
+'message_buses' = [
+    // Good for autowiring, but could be also "receiver_bus" etc.
+    MessageBusInterface::class => [
         HandleMessageMiddleware::class // Default middleware for handling
     ]
 ];
@@ -158,7 +166,7 @@ This is the easiest way to create a message consumer.
 See https://symfony.com/doc/current/messenger.html#messenger-worker for details.
 
 ```
-$messenger = $container->get(MessengerInterface::class);
+$messenger = $container->get(MessageBusInterface::class);
 $transport = $container->get('messenger.transport.some_transport');
 
 (new \Symfony\Component\Messenger\Worker([
@@ -171,14 +179,14 @@ $transport = $container->get('messenger.transport.some_transport');
 You can also build your own. As you can see in this example, the message bus is actually only do the handling, the receiving is done through the transport self.
 
 ```
-$messenger = $container->get(MessengerInterface::class);
+$messenger = $container->get(MessageBusInterface::class);
 $transport = $container->get('messenger.transport.some_transport');
 
 while(true) {
-	foreach($transport->get() as $k => $envelope) {
-	    $receiver->ack($envelope);
-	    $messenger->dispatch($envelope); // This will actually call the handlers, $envelope->getMessage() is already the deserialized object
-	}
+    foreach($transport->get() as $k => $envelope) {
+        $receiver->ack($envelope);
+        $messenger->dispatch($envelope); // This will actually call the handlers, $envelope->getMessage() is already the deserialized object
+    }
 }
 
 ```
